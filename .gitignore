@@ -1,0 +1,4 @@
+# plain-text school data never gets committed
+school-data.json
+school-data.js
+.DS_Store

@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Family Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@200;300;500;600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calm and glanceable; readable from across the kitchen
+   IDEA: a Lowcountry morning board: a harbor-blue sky panel beside an oyster-white school board
+   PICTURE: the giant clock and the live sky glyph on the harbor band
+   COLOUR and TYPE: harbor blue, oyster white, sunset coral for heads-up items; Outfit numerals, Inter text
+   LAYOUT: 40/60 full-height split on landscape screens; stacks on portrait screens and phones */
+:root{--band:#133B52;--bandInk:#F2F6F9;--bandSoft:rgba(242,246,249,.66);--glass:rgba(255,255,255,.09);
+--bg:#F4F2EC;--card:#fff;--ink:#16232B;--soft:#5D6C76;--line:#E3DFD5;
+--coral:#EF5F52;--levi:#2A9D8F;--owen:#D98B1E;--all:#62717C;--up:#1E8E5A;--down:#C4453B}
+html[data-mode=night]{--band:#0B1C26;--bandInk:#D5DEE4;--bandSoft:rgba(213,222,228,.55);--glass:rgba(255,255,255,.06);
+--bg:#0F181E;--card:#15222A;--ink:#D8E0E5;--soft:#8695A0;--line:#23333D;--coral:#B9524A;--up:#4CC38A;--down:#E57368}
+*{box-sizing:border-box;min-width:0}
+html{font-size:clamp(14px,1.04vw,24px)}
+body{margin:0;height:100vh;overflow:hidden;background:var(--bg);color:var(--ink);font:400 1rem/1.4 Inter,system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased;transition:background 1.5s,color 1.5s}
+body.idle{cursor:none}
+.num{font-family:Outfit,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+.wrap{display:grid;grid-template-columns:minmax(0,40fr) minmax(0,60fr);grid-template-rows:100vh;height:100vh}
+.L{background:var(--band);color:var(--bandInk);padding:1.9rem 2.6rem 1.6rem;display:flex;flex-direction:column;gap:1rem;transition:background 1.5s;min-height:0;overflow:hidden}
+.R{padding:1.9rem 2.6rem 1.2rem;display:flex;flex-direction:column;gap:1.05rem;min-height:0;overflow:hidden}
+.greet{color:var(--bandSoft);font-size:1.1rem;display:flex;justify-content:space-between;gap:1rem}
+.clock{font:200 8.9rem/.86 Outfit,system-ui,sans-serif;letter-spacing:-.035em;display:flex;align-items:flex-start;cursor:pointer;margin-top:.2rem;font-variant-numeric:tabular-nums}
+.clock small{font-size:2rem;font-weight:300;letter-spacing:0;margin:.7rem 0 0 .7rem;opacity:.7}
+.date{font:500 2rem/1.1 Outfit,system-ui,sans-serif}
+.chip{display:inline-flex;gap:.5rem;align-items:center;background:var(--glass);border-radius:999px;padding:.5rem 1.1rem;font-size:1.1rem;width:fit-content;max-width:100%}
+.chip b{color:#FFCE94;font-weight:600}
+.chip:empty{display:none}
+.now{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1.3rem;align-items:center;margin-top:.3rem}
+.now .ic svg{width:6.2rem;height:6.2rem;display:block}
+.temp{font:300 5rem/1 Outfit,system-ui,sans-serif;letter-spacing:-.02em}
+.temp sup{font-size:.45em;vertical-align:.9em}
+.cond{font-size:1.4rem;font-weight:500}
+.meta{color:var(--bandSoft);font-size:1.02rem}
+.hint{background:var(--glass);border-radius:16px;padding:.75rem 1.1rem;font-size:1.12rem}
+.hint b{font-weight:600}
+.hint:empty{display:none}
+.strip{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:.3rem;text-align:center}
+.strip.days{grid-template-columns:repeat(5,minmax(0,1fr));border-top:1px solid rgba(255,255,255,.14);padding-top:1rem;margin-top:auto}
+.strip>div{display:flex;flex-direction:column;align-items:center;gap:.15rem}
+.strip .t{color:var(--bandSoft);font-size:.95rem;white-space:nowrap}
+.strip svg{width:2.4rem;height:2.4rem}
+.strip .v{font:500 1.35rem/1 Outfit,system-ui,sans-serif;white-space:nowrap}
+.strip .v span{color:var(--bandSoft);font-weight:300}
+.strip .p{font-size:.85rem;color:#8FD0F7;min-height:1.15em}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:.6rem 1.2rem;flex-wrap:wrap}
+h1{font:600 2.1rem/1.05 Outfit,system-ui,sans-serif;margin:0}
+.legend{display:flex;gap:.4rem 1.2rem;flex-wrap:wrap;color:var(--soft);font-size:.95rem}
+.who{display:inline-flex;align-items:center;gap:.35rem;font-size:.95rem;font-weight:500;white-space:nowrap}
+.who i{width:.72rem;height:.72rem;border-radius:50%;display:inline-block;flex:none}
+.whos{display:flex;flex-direction:column;align-items:flex-end;gap:.2rem}
+.heads{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:1rem}
+.col{border-radius:20px;padding:1.05rem 1.3rem 1.15rem;background:var(--card);border:1px solid var(--line);transition:background .6s}
+.col.hot{background:var(--coral);border-color:transparent;color:#fff}
+.col h2{font:600 1.25rem/1.2 Outfit,system-ui,sans-serif;margin:0 0 .65rem}
+.col h2 span{font-weight:400;opacity:.75}
+.col ul{list-style:none;margin:0;padding:0;display:grid;gap:.7rem}
+.it{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:.75rem;align-items:start}
+.it[data-id]{cursor:pointer}
+.k{font-size:.8rem;font-weight:600;padding:.22rem .6rem;border-radius:8px;background:rgba(0,0,0,.07);white-space:nowrap;margin-top:.12rem}
+.hot .k{background:rgba(255,255,255,.24)}
+.it b{display:block;font-size:1.15rem;font-weight:600;line-height:1.25}
+.it small{display:block;font-size:.95rem;opacity:.82;margin-top:.1rem}
+.hot .who i{box-shadow:0 0 0 2px rgba(255,255,255,.9)}
+.it.done b{text-decoration:line-through;opacity:.6}
+.it.done small:after{content:" · done, tap to undo"}
+.empty{color:var(--soft);font-size:1.1rem;margin:0}
+.hot .empty{color:#fff}
+.list{flex:1;min-height:0;overflow:hidden;-webkit-mask-image:linear-gradient(#000 86%,transparent);mask-image:linear-gradient(#000 86%,transparent)}
+.list h3{font:600 1.25rem/1.2 Outfit,system-ui,sans-serif;margin:0 0 .2rem}
+.list ul{list-style:none;margin:0;padding:0}
+.ev{display:grid;grid-template-columns:4.4rem minmax(0,1fr) auto;gap:1.1rem;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--line)}
+.d{text-align:center;line-height:1}
+.d b{display:block;font:500 2.1rem/1 Outfit,system-ui,sans-serif}
+.d span{font-size:.82rem;color:var(--soft);white-space:nowrap}
+.ev .t b{font-size:1.15rem;font-weight:600;display:block;line-height:1.25}
+.ev .t small{color:var(--soft);font-size:.95rem;display:block}
+.ev .t .who{margin-right:.5rem;color:var(--ink)}
+.ev .r{display:flex;flex-direction:column;align-items:flex-end;gap:.35rem}
+.ev em{font-style:normal;color:var(--soft);font-size:.95rem;white-space:nowrap}
+.tag{font-size:.8rem;font-weight:600;padding:.2rem .6rem;border-radius:8px;white-space:nowrap;background:#E3EEF4;color:#24506A}
+.tag.noschool{background:#FDE3DF;color:#A2352B}.tag.early{background:#FFEFD3;color:#875200}
+.tag.bring{background:#DDF2EE;color:#1D6A60}.tag.wear{background:#EEE7FA;color:#55369E}
+html[data-mode=night] .tag{filter:brightness(.8) saturate(.9)}
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:.8rem 1.3rem;display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.tile .lab{color:var(--soft);font-size:.92rem}
+.tile .v{font:500 2.1rem/1.08 Outfit,system-ui,sans-serif;white-space:nowrap}
+.tile .v small{font-size:.45em;color:var(--soft);font-weight:400}
+.tile .v2{font:500 1.3rem/1.3 Outfit,system-ui,sans-serif;white-space:nowrap}
+.tile .v2 span{color:var(--soft);font-weight:300}
+.tile svg{flex:none}
+.tile{container-type:inline-size}
+@container (max-width:250px){.tile>svg{display:none}}
+.coin,.wave{width:3.2rem;height:3.2rem}.arc{width:5.4rem;height:3rem}
+.chg{font-weight:600;font-size:.98rem}.chg.up{color:var(--up)}.chg.down{color:var(--down)}
+.foot{color:var(--soft);font-size:.8rem;display:flex;justify-content:space-between;gap:.3rem 1rem;flex-wrap:wrap}
+.foot .stale{color:var(--coral);font-weight:600}
+@media (max-width:900px),(max-aspect-ratio:1/1){
+ html{font-size:15px}body{height:auto;overflow:auto}.wrap{grid-template-columns:1fr;grid-template-rows:auto;height:auto}.L,.R{overflow:visible}
+ .clock{font-size:6.5rem}.heads,.tiles{grid-template-columns:1fr}.list{-webkit-mask-image:none;mask-image:none}
+ .L,.R{padding:1.4rem max(5vw,16px)}.strip.days{margin-top:.5rem}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <section class="L">
+  <div class="greet"><span id="greet">Good morning</span><span id="place">Mount Pleasant</span></div>
+  <div class="clock" id="clock" title="Tap for full screen"><span id="hm">--:--</span><small id="ap"></small></div>
+  <div class="date" id="date"></div>
+  <div class="chip" id="count"></div>
+  <div class="now"><div class="ic" id="nowic"></div><div><div class="temp" id="temp">--°</div><div class="cond" id="cond">Loading weather…</div></div></div>
+  <div class="meta" id="meta"></div>
+  <div class="hint" id="hint"></div>
+  <div class="strip" id="hours"></div>
+  <div class="strip days" id="days"></div>
+ </section>
+ <section class="R">
+  <div class="top"><h1>Heads up</h1><div class="legend" id="legend"></div></div>
+  <div class="heads" id="heads"><div class="col" id="today"></div><div class="col" id="tomorrow"></div></div>
+  <div class="list"><h3>Coming up at school</h3><ul id="up"></ul></div>
+  <div class="tiles">
+   <div class="tile" id="ag"><div><div class="lab">Silver spot</div><div class="v num">—</div><div class="lab">Loading…</div></div></div>
+   <div class="tile" id="tide"><div><div class="lab">Tides, Charleston</div><div class="v2 num">—</div></div></div>
+   <div class="tile" id="sun"><div><div class="lab">Sun</div><div class="v2 num">—</div></div></div>
+  </div>
+  <div class="foot"><span id="src"></span><span>Weather: Open-Meteo · Silver: gold-api.com · Tides: NOAA</span></div>
+ </section>
+</div>
+<script>
+(() => {
+/* ---------- settings ---------- */
+const CFG = {lat: 32.87, lon: -79.79, place: 'Mount Pleasant', tz: 'America/New_York',
+  tideStation: '8665530', // NOAA: Charleston, Cooper River Entrance
+  wxEveryMin: 15, silverEveryMin: 10, tideEveryMin: 180, schoolEveryMin: 30};
+
+const $ = s => document.querySelector(s);
+const pad = n => String(n).padStart(2, '0');
+const ymd = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const parse = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const dayDiff = (a, b) => Math.round((parse(ymd(b)) - parse(ymd(a))) / 864e5);
+const fmtT = d => d.toLocaleTimeString('en-US', {hour: 'numeric', minute: '2-digit'});
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c]));
+const D = () => window.DASH_DATA || {events: [], todos: [], kids: {}, missing: true};
+let store = {}; try { store = JSON.parse(localStorage.getItem('wellsDash') || '{}'); } catch (e) {}
+const save = () => { try { localStorage.setItem('wellsDash', JSON.stringify(store)); } catch (e) {} };
+let wx = null, ag = null, tides = null;
+
+/* ---------- weather icons ---------- */
+const SUN = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><circle r="11" fill="#FFC94A"/><path d="M0-21v5M0 16v5M-21 0h5M16 0h5M-14.8-14.8l3.5 3.5M11.3 11.3l3.5 3.5M-14.8 14.8l3.5-3.5M11.3-11.3l3.5-3.5" stroke="#FFC94A" stroke-width="3.4" stroke-linecap="round"/></g>`;
+const MOON = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><path d="M4-15A15 15 0 1 0 15 6 12 12 0 0 1 4-15z" fill="#EDE6C6"/></g>`;
+const CLOUD = (dx, dy, f) => `<path transform="translate(${dx} ${dy})" d="M19 50h27a11 11 0 0 0 1.6-21.9A15.5 15.5 0 0 0 18.4 31 9.5 9.5 0 0 0 19 50z" fill="${f}"/>`;
+function kind(c) {
+  if (c <= 1) return 'clear'; if (c === 2) return 'partly'; if (c === 3) return 'cloud';
+  if (c === 45 || c === 48) return 'fog'; if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) return 'rain';
+  if ((c >= 71 && c <= 77) || c === 85 || c === 86) return 'snow'; if (c >= 95) return 'storm'; return 'cloud';
+}
+function label(c) {
+  const m = {0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Cloudy', 45: 'Fog', 48: 'Fog'};
+  if (m[c]) return m[c]; if (c >= 51 && c <= 57) return 'Drizzle'; if (c >= 61 && c <= 67) return 'Rain';
+  if (c >= 71 && c <= 77) return 'Snow'; if (c >= 80 && c <= 82) return 'Showers'; if (c === 85 || c === 86) return 'Snow showers';
+  if (c >= 95) return 'Thunderstorms'; return '';
+}
+function icon(code, day) {
+  const k = kind(code), C = '#E6EDF2';
+  let g;
+  if (k === 'clear') g = day ? SUN(32, 32, 1.15) : MOON(32, 32, 1.4);
+  else if (k === 'partly') g = (day ? SUN(22, 22, .85) : MOON(24, 22, 1)) + CLOUD(3, 4, C);
+  else if (k === 'cloud') g = CLOUD(-6, -4, '#B9C7D1') + CLOUD(4, 2, C);
+  else if (k === 'fog') g = CLOUD(0, -8, C) + '<path d="M12 50h40M18 58h28" stroke="#C9D5DD" stroke-width="4" stroke-linecap="round"/>';
+  else if (k === 'rain') g = CLOUD(0, -7, C) + '<path d="M24 50l-3 8M34 50l-3 8M44 50l-3 8" stroke="#73C6F4" stroke-width="3.6" stroke-linecap="round"/>';
+  else if (k === 'snow') g = CLOUD(0, -7, C) + '<g fill="#fff"><circle cx="23" cy="53" r="2.6"/><circle cx="33" cy="58" r="2.6"/><circle cx="43" cy="53" r="2.6"/></g>';
+  else g = CLOUD(0, -7, '#B9C6D0') + '<path d="M35 42l-9 12h7l-4 10 12-14h-7l4-8z" fill="#FFD23F"/>';
+  return `<svg viewBox="0 0 64 64" aria-hidden="true">${g}</svg>`;
+}
+
+/* ---------- clock + day/night ---------- */
+function setMode() {
+  const forced = new URLSearchParams(location.search).get('mode');
+  let m = forced;
+  if (!m) {
+    const n = new Date();
+    let rise = new Date(), set = new Date();
+    rise.setHours(7, 0, 0, 0); set.setHours(18, 0, 0, 0);
+    if (wx && wx.daily) { rise = new Date(wx.daily.sunrise[0]); set = new Date(wx.daily.sunset[0]); }
+    m = (n < rise - 20 * 6e4 || n > set.getTime() + 30 * 6e4) ? 'night' : 'day';
+  }
+  document.documentElement.dataset.mode = m;
+}
+let lastMin = -1;
+function tick() {
+  const n = new Date(), H = n.getHours(), M = n.getMinutes();
+  $('#hm').textContent = (H % 12 || 12) + ':' + pad(M);
+  $('#ap').textContent = H < 12 ? 'AM' : 'PM';
+  if (M === lastMin) return;
+  lastMin = M;
+  $('#date').textContent = n.toLocaleDateString('en-US', {weekday: 'long', month: 'long', day: 'numeric'});
+  $('#greet').textContent = (H < 12 ? 'Good morning' : H < 17 ? 'Good afternoon' : 'Good evening') + (D().family ? ', ' + D().family + ' family' : '');
+  renderSchool(); renderSun(); renderTides(); setMode();
+  if (H === 3 && M === 5) location.reload(); // pick up any code changes once a night
+}
+
+/* ---------- weather ---------- */
+const WX_URL = 'https://api.open-meteo.com/v1/forecast?latitude=' + CFG.lat + '&longitude=' + CFG.lon +
+  '&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day' +
+  '&hourly=temperature_2m,precipitation_probability,weather_code,is_day' +
+  '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset' +
+  '&temperature_unit=fahrenheit&wind_speed_unit=mph&forecast_days=6&timezone=' + encodeURIComponent(CFG.tz);
+async function loadWx() {
+  try {
+    const r = await fetch(WX_URL, {cache: 'no-store'});
+    if (!r.ok) throw new Error(r.status);
+    wx = await r.json(); store.wx = {t: Date.now(), d: wx}; save();
+  } catch (e) { if (!wx && store.wx) wx = store.wx.d; }
+  renderWx();
+}
+function hint(lo, hi, p) {
+  const out = [];
+  if (p >= 60) out.push('<b>Rain likely</b>: umbrellas and rain jackets');
+  else if (p >= 30) out.push('<b>Chance of showers</b>: toss in a rain jacket');
+  if (lo <= 40) out.push('<b>Cold morning</b>: real coats and hats');
+  else if (lo <= 52) out.push('<b>Chilly start</b>: grab a jacket');
+  else if (lo <= 62 && hi >= 74) out.push('<b>Layers</b>: cool morning, warm afternoon');
+  if (hi >= 88) out.push('<b>Hot one</b>: water bottles and sunscreen');
+  if (!out.length) out.push('<b>Comfortable</b>: no jacket needed');
+  return out.slice(0, 2).join(' · ');
+}
+function renderWx() {
+  if (!wx || !wx.current) { $('#cond').textContent = 'Weather unavailable right now'; return; }
+  const c = wx.current, d = wx.daily, H = wx.hourly;
+  const hi = Math.round(d.temperature_2m_max[0]), lo = Math.round(d.temperature_2m_min[0]), p = d.precipitation_probability_max[0] || 0;
+  $('#nowic').innerHTML = icon(c.weather_code, c.is_day);
+  $('#temp').innerHTML = Math.round(c.temperature_2m) + '<sup>°F</sup>';
+  $('#cond').textContent = label(c.weather_code);
+  $('#meta').textContent = `Feels ${Math.round(c.apparent_temperature)}° · High ${hi}° · Low ${lo}° · Rain ${p}% · Wind ${Math.round(c.wind_speed_10m)} mph`;
+  $('#hint').innerHTML = hint(lo, hi, p);
+  const n = new Date();
+  let i = H.time.findIndex(s => new Date(s) > n); if (i < 0) i = 0;
+  let h = '';
+  for (let k = 0; k < 6; k++) {
+    const j = i + k * 2; if (j >= H.time.length) break;
+    const hr = new Date(H.time[j]).getHours(), pp = H.precipitation_probability[j] || 0;
+    h += `<div><span class="t">${hr % 12 || 12} ${hr < 12 ? 'AM' : 'PM'}</span>${icon(H.weather_code[j], H.is_day[j])}<span class="v num">${Math.round(H.temperature_2m[j])}°</span><span class="p">${pp >= 20 ? pp + '% rain' : ''}</span></div>`;
+  }
+  $('#hours').innerHTML = h;
+  let dh = '';
+  for (let k = 1; k <= 5 && k < d.time.length; k++) {
+    const pp = d.precipitation_probability_max[k] || 0;
+    dh += `<div><span class="t">${parse(d.time[k]).toLocaleDateString('en-US', {weekday: 'short'})}</span>${icon(d.weather_code[k], 1)}<span class="v num">${Math.round(d.temperature_2m_max[k])}° <span>${Math.round(d.temperature_2m_min[k])}°</span></span><span class="p">${pp >= 30 ? pp + '% rain' : ''}</span></div>`;
+  }
+  $('#days').innerHTML = dh;
+  renderSun(); setMode();
+}
+function renderSun() {
+  if (!wx || !wx.daily) return;
+  const r = new Date(wx.daily.sunrise[0]), s = new Date(wx.daily.sunset[0]), n = new Date();
+  const mins = Math.round((s - r) / 6e4), f = Math.min(1, Math.max(0, (n - r) / (s - r))), up = n >= r && n <= s;
+  const x = 60 - 48 * Math.cos(Math.PI * f), y = 58 - 48 * Math.sin(Math.PI * f);
+  $('#sun').innerHTML = `<div><div class="lab">Sun</div><div class="v2 num"><span>Rise</span> ${fmtT(r)}</div><div class="v2 num"><span>Set</span> ${fmtT(s)}</div><div class="lab">${Math.floor(mins / 60)}h ${mins % 60}m daylight</div></div>
+   <svg class="arc" viewBox="0 0 120 66" aria-hidden="true"><path d="M12 58A48 48 0 0 1 108 58" fill="none" stroke="var(--soft)" stroke-opacity=".45" stroke-width="2.5" stroke-dasharray="1 6" stroke-linecap="round"/><path d="M4 58h112" stroke="var(--line)" stroke-width="2"/>${up ? `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="7" fill="#FFB938"/>` : ''}</svg>`;
+}
+
+/* ---------- silver ---------- */
+const AG_SOURCES = [
+  {u: 'https://api.gold-api.com/price/XAG', f: j => ({p: +j.price})}
+];
+async function loadAg() {
+  for (const s of AG_SOURCES) {
+    try {
+      const r = await fetch(s.u, {cache: 'no-store'});
+      if (!r.ok) continue;
+      const v = s.f(await r.json());
+      if (v.p > 0) { ag = v; ag.t = new Date(); trackAg(); break; }
+    } catch (e) {}
+  }
+  renderAg();
+}
+function trackAg() {
+  const t = ymd(new Date()), s = store.ag || {};
+  if (s.day !== t) { if (s.last) s.prev = s.last; s.day = t; s.open = ag.p; }
+  s.last = ag.p; store.ag = s; save();
+}
+function renderAg() {
+  const coin = `<svg class="coin" viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="agg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F5F7F9"/><stop offset=".55" stop-color="#B9C0C7"/><stop offset="1" stop-color="#868F98"/></linearGradient></defs><circle cx="32" cy="32" r="28" fill="url(#agg)"/><circle cx="32" cy="32" r="22" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width="1.5"/><text x="32" y="39" text-anchor="middle" font-family="Outfit,sans-serif" font-weight="600" font-size="19" fill="#59626A">Ag</text></svg>`;
+  if (!ag) { $('#ag').innerHTML = `<div><div class="lab">Silver, per troy oz</div><div class="v num">—</div><div class="lab">Price feed unavailable</div></div>${coin}`; return; }
+  let chg = '', s = store.ag || {};
+  if (isFinite(ag.c)) chg = mk(ag.c, ag.pc, 'today');
+  else { const base = s.prev || s.open; if (base && base !== ag.p) chg = mk(ag.p - base, (ag.p - base) / base * 100, s.prev ? 'since yesterday' : 'since this morning'); }
+  function mk(c, pc, when) { const cls = c >= 0 ? 'up' : 'down'; return `<span class="chg ${cls}">${c >= 0 ? '+' : '−'}$${Math.abs(c).toFixed(2)} (${Math.abs(pc).toFixed(1)}%)</span> ${when}`; }
+  $('#ag').innerHTML = `<div><div class="lab">Silver, per troy oz</div><div class="v num">$${ag.p.toFixed(2)}</div><div class="lab">${chg || 'Updated ' + fmtT(ag.t)}</div></div>${coin}`;
+}
+
+/* ---------- tides ---------- */
+async function loadTides() {
+  const n = new Date(), b = n.getFullYear() + pad(n.getMonth() + 1) + pad(n.getDate());
+  const u = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?product=predictions&station=' + CFG.tideStation +
+    '&begin_date=' + b + '&range=48&datum=MLLW&time_zone=lst_ldt&interval=hilo&units=english&format=json&application=family_dashboard';
+  try {
+    const r = await fetch(u, {cache: 'no-store'}); const j = await r.json();
+    if (j.predictions) { store.tides = j.predictions; save(); }
+  } catch (e) {}
+  renderTides();
+}
+function renderTides() {
+  const raw = store.tides; if (!raw) return;
+  const n = new Date(), tm = new Date(n); tm.setDate(n.getDate() + 1);
+  tides = raw.map(x => ({t: new Date(x.t.replace(' ', 'T')), v: +x.v, type: x.type})).filter(x => x.t > n).slice(0, 2);
+  const wave = `<svg class="wave" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 30c6-6 10-6 16 0s10 6 16 0 10-6 16 0" fill="none" stroke="#3E8FB8" stroke-width="4" stroke-linecap="round"/><path d="M6 44c6-6 10-6 16 0s10 6 16 0 10-6 16 0" fill="none" stroke="#7DB9D6" stroke-width="4" stroke-linecap="round"/></svg>`;
+  if (!tides.length) { $('#tide').innerHTML = `<div><div class="lab">Tides, Charleston</div><div class="v2">Updating…</div></div>${wave}`; return; }
+  const row = x => `<div class="v2 num"><span>${x.type === 'H' ? 'High' : 'Low'}</span> ${fmtT(x.t)}${ymd(x.t) === ymd(tm) ? ' <span>tmrw</span>' : ''}</div>`;
+  $('#tide').innerHTML = `<div><div class="lab">Tides, Charleston</div>${tides.map(row).join('')}<div class="lab">Next ${tides[0].type === 'H' ? 'high' : 'low'}: ${tides[0].v.toFixed(1)} ft</div></div>${wave}`;
+}
+
+/* ---------- school ---------- */
+const TYPES = {noschool: 'No school', early: 'Early release', event: 'Event', bring: 'Bring', wear: 'Wear', homework: 'Homework', info: 'Note'};
+const active = (e, d) => e.date <= d && (e.end || e.date) >= d;
+function pills(who) {
+  const kids = D().kids || {};
+  return (who || []).filter(w => w !== 'all').map(w => {
+    const k = kids[w] || {name: w === 'all' ? 'Everyone' : w === 'family' ? 'Family' : w, color: 'var(--all)'};
+    return `<span class="who"><i style="background:${esc(k.color)}"></i>${esc(k.name)}</span>`;
+  }).join('');
+}
+function item(x, todo) {
+  const lines = [];
+  if (x.time) lines.push(esc(x.time));
+  if (x.detail) lines.push(esc(x.detail));
+  if (x.bring) lines.push('Bring: ' + esc(x.bring));
+  if (x.wear) lines.push('Wear: ' + esc(x.wear));
+  const done = todo && store.done && store.done[x.id];
+  return `<li class="it${done ? ' done' : ''}"${todo ? ` data-id="${esc(x.id)}"` : ''}><span class="k">${TYPES[x.type] || 'Note'}</span><div><b>${esc(x.title)}</b>${lines.length ? `<small>${lines.join(' · ')}</small>` : ''}</div><span class="whos">${pills(x.who)}</span></li>`;
+}
+function renderSchool() {
+  const data = D(), n = new Date(), t = ymd(n), tmD = new Date(n); tmD.setDate(n.getDate() + 1);
+  if (data.missing) {
+    $('#today').className = 'col'; $('#today').innerHTML = `<h2>Today</h2><p class="empty">${esc(schoolMsg)}</p>`;
+    $('#tomorrow').innerHTML = '<h2>Tomorrow</h2><p class="empty">—</p>';
+    $('#up').innerHTML = ''; $('#count').innerHTML = ''; $('#legend').innerHTML = ''; $('#src').textContent = schoolMsg;
+    return;
+  }
+  const tm = ymd(tmD), weekend = d => d.getDay() === 0 || d.getDay() === 6;
+  const ev = (data.events || []).slice().sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+  const done = store.done || {};
+  const todos = (data.todos || []).filter(x => (!x.from || x.from <= t) && (!x.until || x.until >= t) && !(done[x.id] && done[x.id] < t));
+  const noSchool = d => ev.some(e => active(e, d) && e.type === 'noschool');
+  const today = ev.filter(e => active(e, t)).map(e => item(e));
+  const urgent = today.length + todos.filter(x => !done[x.id]).length > 0;
+  todos.forEach(x => today.push(item(x, true)));
+  if (weekend(n) && !noSchool(t)) today.unshift(item({type: 'info', title: 'Weekend, no school'}));
+  const tomorrow = ev.filter(e => active(e, tm)).map(e => item(e));
+  if (weekend(tmD) && !noSchool(tm)) tomorrow.unshift(item({type: 'info', title: 'Weekend, no school'}));
+  const wd = d => d.toLocaleDateString('en-US', {weekday: 'long'});
+  $('#today').className = 'col' + (urgent ? ' hot' : '');
+  $('#today').innerHTML = `<h2>Today <span>· ${wd(n)}</span></h2>` + (today.length ? `<ul>${today.join('')}</ul>` : '<p class="empty">Nothing extra today. Regular school day.</p>');
+  $('#tomorrow').innerHTML = `<h2>Tomorrow <span>· ${wd(tmD)}</span></h2>` + (tomorrow.length ? `<ul>${tomorrow.join('')}</ul>` : '<p class="empty">Nothing special on the calendar.</p>');
+
+  const up = ev.filter(e => (e.end || e.date) >= t).slice(0, 6);
+  $('#up').innerHTML = up.length ? up.map(e => {
+    const s = parse(e.date), en = parse(e.end || e.date), multi = e.end && e.end !== e.date, dd = dayDiff(n, s);
+    const rel = dd <= 0 ? (multi ? 'Happening now' : 'Today') : dd === 1 ? 'Tomorrow' : dd < 14 ? `in ${dd} days` : `in ${Math.round(dd / 7)} weeks`;
+    const md = x => x.toLocaleDateString('en-US', {weekday: 'short', month: 'short', day: 'numeric'});
+    const sub = [multi ? md(s) + ' to ' + md(en) : '', e.time || '', e.detail || '', e.bring ? 'Bring: ' + e.bring : '', e.wear ? 'Wear: ' + e.wear : ''].filter(Boolean).map(esc).join(' · ');
+    return `<li class="ev"><div class="d"><b class="num">${s.getDate()}</b><span>${s.toLocaleDateString('en-US', {weekday: 'short'})} · ${s.toLocaleDateString('en-US', {month: 'short'})}</span></div><div class="t"><b>${esc(e.title)}</b><small>${pills(e.who)}${sub}</small></div><div class="r"><span class="tag ${esc(e.type)}">${TYPES[e.type] || 'Event'}</span><em>${rel}</em></div></li>`;
+  }).join('') : '<p class="empty">No upcoming school events found.</p>';
+
+  const c = ev.find(e => e.countdown && (e.end || e.date) >= t);
+  if (c) {
+    const dd = dayDiff(n, parse(c.date));
+    $('#count').innerHTML = dd <= 0 ? `<b>${esc(c.title)}</b> is here. Enjoy!` : dd === 1 ? `<b>${esc(c.title)}</b> starts tomorrow` : `<b>${esc(c.title)}</b> starts in ${dd} days`;
+  } else $('#count').innerHTML = '';
+
+  const kids = data.kids || {};
+  $('#legend').innerHTML = Object.keys(kids).map(k => `<span class="who"><i style="background:${esc(kids[k].color)}"></i>${esc(kids[k].name)} <span style="font-weight:400">· ${esc(kids[k].class || '')}</span></span>`).join('');
+  if (data.updated) {
+    const u = new Date(data.updated), age = (n - u) / 36e5;
+    $('#src').innerHTML = age > 36
+      ? `<span class="stale">School info is ${Math.floor(age / 24)} days old. Check the morning refresh.</span>`
+      : `School info from Gmail · updated ${u.toLocaleDateString('en-US', {weekday: 'short'})} ${fmtT(u)}`;
+  } else $('#src').textContent = 'No school data file found (school-data.js)';
+}
+/* School info is published encrypted (school-data.enc.json). The passphrase rides in the link
+   after #k= and never leaves the browser. Opened from disk, the page reads school-data.js instead. */
+let schoolMsg = 'Loading school info…';
+const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function decryptSchool(j, pass) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey({name: 'PBKDF2', salt: b64(j.salt), iterations: j.iter, hash: 'SHA-256'},
+    base, {name: 'AES-GCM', length: 256}, false, ['decrypt']);
+  const pt = await crypto.subtle.decrypt({name: 'AES-GCM', iv: b64(j.iv)}, key, b64(j.ct));
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+function loadSchoolScript() {
+  const s = document.createElement('script');
+  s.src = 'school-data.js?v=' + Date.now();
+  s.onload = () => { renderSchool(); s.remove(); lastMin = -1; tick(); };
+  s.onerror = () => { schoolMsg = 'No school-data.js next to this file'; renderSchool(); s.remove(); };
+  document.head.appendChild(s);
+}
+async function loadSchool() {
+  if (location.protocol === 'file:') { loadSchoolScript(); return; }
+  let pass = new URLSearchParams(location.hash.slice(1)).get('k');
+  if (pass) { store.pass = pass; save(); } else pass = store.pass;
+  if (!pass) { schoolMsg = 'School info is locked. Open the dashboard link that ends in #k=…'; renderSchool(); return; }
+  if (!window.crypto || !crypto.subtle) { schoolMsg = 'Open the dashboard over https to unlock school info'; renderSchool(); return; }
+  let enc = null;
+  try {
+    const r = await fetch('school-data.enc.json?v=' + Date.now(), {cache: 'no-store'});
+    if (r.ok) { enc = await r.json(); store.enc = enc; save(); }
+  } catch (e) {}
+  if (!enc) enc = store.enc;
+  if (!enc) { schoolMsg = 'School info could not be loaded'; renderSchool(); return; }
+  try { window.DASH_DATA = await decryptSchool(enc, pass); }
+  catch (e) { window.DASH_DATA = null; schoolMsg = 'School info is locked: the passphrase in the link does not match'; }
+  renderSchool(); lastMin = -1; tick();
+}
+
+/* ---------- interaction ---------- */
+$('#heads').addEventListener('click', e => {
+  const li = e.target.closest('li[data-id]'); if (!li) return;
+  store.done = store.done || {};
+  const id = li.dataset.id;
+  if (store.done[id]) delete store.done[id]; else store.done[id] = ymd(new Date());
+  save(); renderSchool();
+});
+$('#clock').addEventListener('click', () => {
+  try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {}); } catch (e) {}
+});
+let idleT;
+document.addEventListener('mousemove', () => { document.body.classList.remove('idle'); clearTimeout(idleT); idleT = setTimeout(() => document.body.classList.add('idle'), 4000); });
+
+/* ---------- start ---------- */
+$('#place').textContent = CFG.place;
+if (store.wx) wx = store.wx.d;
+tick(); renderWx(); renderAg();
+setInterval(tick, 1000);
+loadWx(); loadAg(); loadTides();
+setInterval(loadWx, CFG.wxEveryMin * 6e4);
+setInterval(loadTides, CFG.tideEveryMin * 6e4);
+setInterval(loadAg, CFG.silverEveryMin * 6e4);
+loadSchool();
+setInterval(loadSchool, CFG.schoolEveryMin * 6e4);
+window.addEventListener('hashchange', loadSchool);
+})();
+</script>
+</body>
+</html>
